@@ -1,5 +1,7 @@
 import { trackMouse, trackWindow, trackKey } from './handlers/events.js';
 import { SpaceCanvas } from './classes/canvas.js';
+import { NUMBER_OF_CONSTELATIONS } from './config.js';
+
 
 var space = new SpaceCanvas();
 var c = space.getContext();
@@ -13,7 +15,7 @@ function init() {
     trackMouse(mouse);
     trackWindow(space.canvas);
     trackKey(space);
-    space.generateConstellations();
+    space.generateConstellations(NUMBER_OF_CONSTELATIONS);
     animate();
 }
 

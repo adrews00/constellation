@@ -1,12 +1,11 @@
 import { randomIntFromRange } from "../util/util.js";
-
-const ELLIPSE_PADDING = 4;
+import { ELLIPSE_PADDING } from "../config.js";
 
 export class Star {
-    constructor(space, constellation) {
-        this.space = space;
+    constructor(constellation) {
         this.constellation = constellation;
-        this.c = space.c;
+        this.space = constellation.space;
+        this.c = constellation.space.c;
         this.color = '#fff';
         this.radius = randomIntFromRange(1, 2);
         this.ellipseComplete = 0; 
@@ -15,7 +14,6 @@ export class Star {
     }
 
     draw() {
-        
         this.c.beginPath();
         this.c.fillStyle = this.color;
         this.c.arc(
@@ -33,22 +31,8 @@ export class Star {
             this.drawSpawnArea();
         }
         if (this.space.showPosition) {
-            this.displayPosition();
+            this.drawPositions();
         }
-    }
-
-
-    displayPosition() {
-        this.c.fillStyle = '#ffffff77';
-        this.c.font = '10px Arial';
-        this.c.fillText('n: ' + this.number, this.position.x + 10, this.position.y - 10);
-        this.c.fillText('x: ' + this.position.x, this.position.x + 10, this.position.y);
-        this.c.fillText('y: ' + this.position.y, this.position.x + 10, this.position.y + 10);
-
-        this.c.fillText('rx: ' + this.spawnPoint.rx, this.spawnPoint.x + this.spawnPoint.rx + 5, this.spawnPoint.y - this.spawnPoint.ry + 10);
-        this.c.fillText('ry: ' + this.spawnPoint.ry, this.spawnPoint.x + this.spawnPoint.rx + 5, this.spawnPoint.y - this.spawnPoint.ry + 20);
-        this.c.fillText('x: ' + this.spawnPoint.y, this.spawnPoint.x + this.spawnPoint.rx + 5, this.spawnPoint.y - this.spawnPoint.ry + 30);
-        this.c.fillText('y: ' + this.spawnPoint.x, this.spawnPoint.x + this.spawnPoint.rx + 5, this.spawnPoint.y - this.spawnPoint.ry + 40);
     }
 
     drawEllipse() {
@@ -68,96 +52,35 @@ export class Star {
             this.ellipseComplete++;
             this.ellipseComplete++;
         } else {
-            this.connectToNext();
+            this.children.forEach(child => {
+                child.connectToNext();
+            })
         }
 
         
     }
 
-    setChildSpawnArea(constellation) {
-        this.spawnPoint = {};
-        if (constellation.primaryStar.position.x < constellation.position.x) {
-            this.spawnPoint.rx = (constellation.position.x + constellation.radius - this.position.x) / constellation.numberOfStars + this.number;
-            this.spawnPoint.x = this.position.x + this.spawnPoint.rx;
-        } else {
-            this.spawnPoint.rx = (this.position.x - constellation.position.x + constellation.radius ) / constellation.numberOfStars + this.number;
-            this.spawnPoint.x = this.position.x - this.spawnPoint.rx;
-        }
-        if (constellation.primaryStar.position.y < constellation.position.y) {
-            this.spawnPoint.ry = (constellation.position.y + constellation.radius - this.position.y) / constellation.numberOfStars + this.number;
-            this.spawnPoint.y = this.position.y + this.spawnPoint.ry;
-        } else {
-            this.spawnPoint.ry = (this.position.y - constellation.position.y + constellation.radius ) / constellation.numberOfStars + this.number;
-            this.spawnPoint.y = this.position.y - this.spawnPoint.ry;
+    setPosition(spawnArea) {
+        this.position = {
+            x: randomIntFromRange(spawnArea.x1, spawnArea.x2),
+            y: randomIntFromRange(spawnArea.y1, spawnArea.y2)
         }
     }
 
-    drawSpawnArea() {
-        if (this.spawnPoint) {
-            this.c.strokeStyle = '#ffffff10';
-            this.c.rect(this.spawnPoint.x - this.spawnPoint.rx, this.spawnPoint.y - this.spawnPoint.ry , this.spawnPoint.rx *2, this.spawnPoint.ry *2);
-            this.c.stroke();
-            for (let index = 0; index < this.constellation.numberOfStars - this.number; index++) {
-                this.c.moveTo(this.spawnPoint.x + index * this.spawnPoint.rx, this.spawnPoint.y - this.spawnPoint.ry);
-                this.c.lineTo(this.spawnPoint.x + index * this.spawnPoint.rx, this.spawnPoint.y + this.spawnPoint.ry);
-                this.c.stroke()
-            }
-
-            this.c.beginPath();
-            this.c.arc(
-                this.spawnPoint.x, 
-                this.spawnPoint.y,
-                2,
-                0,
-                2*Math.PI
-            );
-            this.c.stroke();
+    setChildSpawnArea() {
+        let spawnArea = {};
+        switch (this.constellation.initialBorder) {
+            case 1: 
+                spawnArea = {
+                    x1: this.position.x,
+                    x2: this.position.x + ((this.constellation.position.x + this.constellation.radius - this.position.x) / this.constellation.numberOfStars - this.number),
+                    y1: this.position.y,
+                    y2: this.position.y + ((this.constellation.position.y + this.constellation.radius - this.position.y) / this.constellation.numberOfStars - this.number)
+                };
+                break;
         }
-    }
-
-    setPosition(constellation, parentStar) {
-        if (this.number == 1) {
-            this.position = {};
-            const margin = constellation.radius * 0.1;
-            
-            switch (constellation.initialBorder) {
-                case 1:
-                    this.position = {
-                        x: randomIntFromRange(constellation.position.x - constellation.radius, constellation.position.x - constellation.radius + margin),
-                        y: randomIntFromRange(constellation.position.y - constellation.radius, constellation.position.y + constellation.radius)
-                    };
-                    break;
-                case 2:
-                    this.position = {
-                        x: randomIntFromRange(constellation.position.x + constellation.radius, constellation.position.x - constellation.radius),
-                        y: randomIntFromRange(constellation.position.y - constellation.radius, constellation.position.y - constellation.radius + margin)
-                    };
-                    break;
-                case 3:
-                    this.position = {
-                        x: randomIntFromRange(constellation.position.x + constellation.radius, constellation.position.x + constellation.radius - margin),
-                        y: randomIntFromRange(constellation.position.y - constellation.radius, constellation.position.y + constellation.radius)
-                    };
-                    break;
-                case 4:
-                    this.position = {
-                        x: randomIntFromRange(constellation.position.x + constellation.radius, constellation.position.x - constellation.radius),
-                        y: randomIntFromRange(constellation.position.y + constellation.radius, constellation.position.y + constellation.radius - margin)
-                    };
-                    break;
-            
-                default:
-                    break;
-            }
-
-        } else {
-            this.position = {
-                x: randomIntFromRange(parentStar.spawnPoint.x - parentStar.spawnPoint.rx, parentStar.spawnPoint.x + parentStar.spawnPoint.rx),
-                y: randomIntFromRange(parentStar.spawnPoint.y - parentStar.spawnPoint.ry, parentStar.spawnPoint.y + parentStar.spawnPoint.ry)
-            }
-        }
-
-        
+        this.spawnArea = spawnArea;
+        return spawnArea;
     }
 
     connectToNext() {
@@ -169,14 +92,48 @@ export class Star {
             this.t++;
             this.t++;
         } else {
-            this.children.forEach(star => {
-                star.drawEllipse();
-            });
+            this.drawEllipse();
         }
 
         this.c.beginPath();
-        this.c.moveTo(this.position.x, this.position.y);
+        this.c.moveTo(this.parent.position.x, this.parent.position.y);
         this.c.lineTo(this.connectionWaypoints[this.t].x,this.connectionWaypoints[this.t].y);
         this.c.stroke();
     }
+
+    drawSpawnArea() {
+        if (this.spawnArea) {
+            this.c.strokeStyle = '#ffffff10';
+            this.c.rect(this.spawnArea.x1, this.spawnArea.y1, (this.spawnArea.x2 - this.spawnArea.x1), (this.spawnArea.y2 - this.spawnArea.y1));
+            this.c.stroke();
+
+
+            this.c.beginPath();
+            this.c.arc(
+                this.spawnArea.x1 + ((this.spawnArea.x2 - this.spawnArea.x1) / 2) , 
+                this.spawnArea.y1 + ((this.spawnArea.y2 - this.spawnArea.y1) / 2) ,
+                2,
+                0,
+                2*Math.PI
+            );
+            this.c.stroke();
+        }
+    }
+
+    drawPositions() {
+        this.c.fillStyle = '#ffffff77';
+        this.c.font = '10px Arial';
+        this.c.fillText('n: ' + this.number, this.position.x + 10, this.position.y - 10);
+        this.c.fillText('x: ' + (this.position.x).toFixed(2), this.position.x + 10, this.position.y);
+        this.c.fillText('y: ' + (this.position.y).toFixed(2), this.position.x + 10, this.position.y + 10);
+
+        if (this.spawnArea) {
+            this.c.fillText('x1: ' + (this.spawnArea.x1).toFixed(2), this.spawnArea.x2 + 5, this.spawnArea.y1  + 10);
+            this.c.fillText('x2: ' + (this.spawnArea.x2).toFixed(2), this.spawnArea.x2 + 5, this.spawnArea.y1  + 20);
+            this.c.fillText('y1: ' + (this.spawnArea.y1).toFixed(2), this.spawnArea.x2 + 5, this.spawnArea.y1  + 30);
+            this.c.fillText('y2: ' + (this.spawnArea.y2).toFixed(2), this.spawnArea.x2 + 5, this.spawnArea.y1  + 40);
+        }
+    }
+
+    
 }

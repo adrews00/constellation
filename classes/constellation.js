@@ -1,80 +1,188 @@
 import { randomIntFromRange, distance, calcWaypoints } from "../util/util.js";
 import { Star } from './star.js';
+import { FIXED_INITIAL_BORDER, FIXED_NUMBER_OF_STARS, FIXED_SIZE, FIXED_POSITION, PRIMARY_START_MAX_DISTANCE, FIXED_NUMBER_OF_CHILDREN } from "../config.js";
+
+
 
 export class Constellation {
     constructor(space) {
+        this.starCount = 0;
         this.space = space;
         this.c = space.c;
-        // this.numberOfStars = 5;
-        // this.initialBorder = 2;
-        this.initialBorder = randomIntFromRange(1,4);
-        this.numberOfStars = randomIntFromRange(3, 8);
+
         this.generate();
     }
 
     generate() {
-        this.setSize();
-        this.setPosition();
-        this.setDirection();
-        
-        this.primaryStar = this.generateStar();
-        this.primaryStar.setChildSpawnArea(this);
-        // let previousStar;
-        // for (let index = 0; index < this.numberOfStars; index++) {
+        this.setInitialBorder(FIXED_INITIAL_BORDER);
+        this.setNumberOfStars(FIXED_NUMBER_OF_STARS);
+        this.setSize(FIXED_SIZE);
+        this.setPosition(FIXED_POSITION);
 
-        //     let star = new Star(this.space);
-        //     star.number = index+1;
-        //     star.setPosition(this, previousStar);
-        //     if ( index === 0 ) {
-        //         this.primaryStar = previousStar = star;
-        //     } else {
-        //         previousStar.connectionWaypoints = calcWaypoints([previousStar.position, star.position]);
-        //         previousStar.children.push(star);
-        //         previousStar = star;
-        //     }
-        //     star.setChildSpawnArea(this);
-        // }
+
+        this.primaryStar = this.generateStar(this.getSpawnArea());
     }
 
-    generateStar() {
-        let star = new Star(this.space, this);
-        star.number = 1;
-        star.setPosition(this);
-        
+    generateStar(spawnArea, parent) {
+        this.starCount++;
+
+        let star = new Star(this);
+        star.number = this.starCount;
+        star.setPosition(spawnArea);
+        star.setChildSpawnArea();
+        if (parent) {
+            star.parent = parent;
+            star.connectionWaypoints = calcWaypoints([parent.position, star.position]);
+        }
+
+        if (this.starCount < this.numberOfStars) {
+            const numberOfChildren = this.setNumberOfChildren(FIXED_NUMBER_OF_CHILDREN);
+            for (let index = 0; index < numberOfChildren; index++) {
+                star.children.push(this.generateStar(star.spawnArea, star));
+            }
+        }
         return star;
     }
 
-    setDirection() {
-        this.direction = randomIntFromRange(1,8);
-    }
-
-    setPosition() {
+    setPosition(fixed) {
+        if (fixed) {
+            this.position = {
+                x: this.space.width / 2,
+                y: this.space.height / 2
+            }
+            return;
+        } 
         this.position = {
-            x: this.space.width / 2,
-            y: this.space.height / 2
+            x: randomIntFromRange( this.radius, this.space.width - this.radius),
+            y: randomIntFromRange( this.radius, this.space.height - this.radius)
+        };
+        for (let i = 0; i < this.space.constellations.length; i++) {
+            const otherConstellation = this.space.constellations[i];
+            if (distance(otherConstellation.position, this.position) < this.radius + otherConstellation.radius) {
+                this.position = {
+                    x: randomIntFromRange( this.radius, this.space.width - this.radius),
+                    y: randomIntFromRange( this.radius, this.space.height - this.radius)
+                };
+                i = -1;
+            }
         }
-        // this.position = {
-        //     x: randomIntFromRange( this.radius, this.space.width - this.radius),
-        //     y: randomIntFromRange( this.radius, this.space.height - this.radius)
-        // };
-        // for (let i = 0; i < this.space.constellations.length; i++) {
-        //     const otherConstellation = this.space.constellations[i];
-        //     if (distance(otherConstellation.position, this.position) < this.radius + otherConstellation.radius) {
-        //         this.position = {
-        //             x: randomIntFromRange( this.radius, this.space.width - this.radius),
-        //             y: randomIntFromRange( this.radius, this.space.height - this.radius)
-        //         };
-        //         i = -1;
-        //     }
-        // }
     }
 
-    setSize() {
-        this.radius = 300;
+    setSize(fixed) {
+        if (fixed) {
+            this.radius = 300;
+            return;
+        }
+        this.radius = Math.round((this.space.height <= this.space.width) 
+        ? this.space.height * randomIntFromRange(10, 20) * 0.01
+        : this.space.width * randomIntFromRange(10, 20) * 0.01);
+    }
 
-        // this.radius = Math.round((this.space.height <= this.space.width) 
-        // ? this.space.height * randomIntFromRange(10, 20) * 0.01
-        // : this.space.width * randomIntFromRange(10, 20) * 0.01);
+    setNumberOfStars(numberOfStars) {
+        if (numberOfStars) {
+            this.numberOfStars = numberOfStars;
+            return;
+        }
+        this.numberOfStars = randomIntFromRange(3, 8);
+    }
+
+    setInitialBorder(initialBorder) {
+        if (initialBorder) {
+            this.initialBorder = initialBorder;
+            return;
+        }
+        this.initialBorder = randomIntFromRange(1,8);
+    }
+
+    setNumberOfChildren(numberOfChildren) {
+        if (numberOfChildren) {
+            return numberOfChildren;
+        }
+        const chance = randomIntFromRange(0, 100);
+        if (chance < 70) {
+            return 1;
+        } else if (chance < 85) {
+            return 2;
+        } else if (chance < 98){
+            return 3;
+        }
+    }
+
+    getSpawnArea() {
+        const margin = this.radius * PRIMARY_START_MAX_DISTANCE;
+        let spawnArea = {};
+        switch (this.initialBorder) {
+            case 1:
+                spawnArea = {
+                    x1: this.position.x - this.radius,
+                    x2: this.position.x,
+                    y1: this.position.y - this.radius,
+                    y2: this.position.y - this.radius + margin
+                };
+                break;
+            case 2:
+                spawnArea = {
+                    x1: this.position.x,
+                    x2: this.position.x + this.radius,
+                    y1: this.position.y - this.radius,
+                    y2: this.position.y - this.radius + margin
+                };
+                break;
+            case 3:
+                spawnArea = {
+                    x1: this.position.x + this.radius,
+                    x2: this.position.x + this.radius - margin,
+                    y1: this.position.y - this.radius,
+                    y2: this.position.y
+                };
+                break;
+            case 4:
+                spawnArea = {
+                    x1: this.position.x + this.radius,
+                    x2: this.position.x + this.radius - margin,
+                    y1: this.position.y,
+                    y2: this.position.y + this.radius
+                };
+                break;
+            case 5:
+                spawnArea = {
+                    x1: this.position.x,
+                    x2: this.position.x + this.radius,
+                    y1: this.position.y + this.radius,
+                    y2: this.position.y + this.radius - margin
+                };
+                break;
+            case 6:
+                spawnArea = {
+                    x1: this.position.x - this.radius,
+                    x2: this.position.x,
+                    y1: this.position.y + this.radius,
+                    y2: this.position.y + this.radius - margin
+                };
+                break;
+            case 7:
+                spawnArea = {
+                    x1: this.position.x - this.radius,
+                    x2: this.position.x - this.radius + margin,
+                    y1: this.position.y,
+                    y2: this.position.y + this.radius
+                };
+                break;
+            case 8:
+                spawnArea = {
+                    x1: this.position.x - this.radius,
+                    x2: this.position.x - this.radius + margin,
+                    y1: this.position.y - this.radius,
+                    y2: this.position.y
+                };
+                break;
+        
+            default:
+                console.error('Invalid initial border.');
+                break;
+        }
+
+        return spawnArea;
     }
 
     animate() {
@@ -92,7 +200,8 @@ export class Constellation {
 
     drawArea() {
         this.c.strokeStyle = '#00ffff10';
-        this.c.rect(this.position.x - this.radius, this.position.y - this.radius, this.radius*2, this.radius*2)
+        this.c.rect(this.position.x - this.radius, this.position.y - this.radius, this.radius * 2, this.radius * 2)
+
         this.c.stroke();
 
         this.c.beginPath();
@@ -106,7 +215,7 @@ export class Constellation {
         this.c.arc(
             this.position.x, 
             this.position.y,
-            this.radius,
+            this.radius-5,
             0,
             2*Math.PI
         );
@@ -116,7 +225,7 @@ export class Constellation {
         this.c.arc(
             this.position.x, 
             this.position.y,
-            2,
+            5,
             0,
             2*Math.PI
         );
@@ -127,9 +236,18 @@ export class Constellation {
         this.c.fillStyle = '#00ffff77';
         this.c.font = '10px Arial';
         this.c.fillText('no. stars: ' + this.numberOfStars, this.position.x + this.radius + 5 , this.position.y - this.radius + 12 );
-        this.c.fillText('start from: ' + this.initialBorder, this.position.x + this.radius + 5 , this.position.y - this.radius + 24 );
-        this.c.fillText('radius: ' + this.radius, this.position.x + this.radius + 5 , this.position.y - this.radius + 36 );
-        this.c.fillText('pos x: ' + this.position.x, this.position.x + this.radius + 5 , this.position.y - this.radius + 48);
-        this.c.fillText('pos y: ' + this.position.y, this.position.x + this.radius + 5 , this.position.y - this.radius + 60);
+        this.c.fillText('border: ' + this.initialBorder, this.position.x + this.radius + 5 , this.position.y - this.radius + 24 );
+        this.c.fillText('radius: ' + (this.radius).toFixed(2), this.position.x + this.radius + 5 , this.position.y - this.radius + 36 );
+        this.c.fillText('pos x: ' + (this.position.x).toFixed(2), this.position.x + this.radius + 5 , this.position.y - this.radius + 48);
+        this.c.fillText('pos y: ' + (this.position.y).toFixed(2), this.position.x + this.radius + 5 , this.position.y - this.radius + 60);
+        
+        this.c.fillText('1', this.position.x - this.radius / 2, this.position.y - this.radius - 10);
+        this.c.fillText('2', this.position.x + this.radius / 2, this.position.y - this.radius - 10);
+        this.c.fillText('3', this.position.x + this.radius + 10, this.position.y - this.radius / 2);
+        this.c.fillText('4', this.position.x + this.radius + 10, this.position.y + this.radius / 2);
+        this.c.fillText('5', this.position.x - this.radius / 2, this.position.y + this.radius + 18);
+        this.c.fillText('6', this.position.x + this.radius / 2, this.position.y + this.radius + 18);
+        this.c.fillText('7', this.position.x - this.radius - 18, this.position.y - this.radius / 2);
+        this.c.fillText('8', this.position.x - this.radius - 18, this.position.y + this.radius / 2);
     }
 }

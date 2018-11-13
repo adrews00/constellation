@@ -1,12 +1,13 @@
 import { Constellation } from "./constellation.js";
+import { SHOW_AREA, SHOW_POSITIONS } from "../config.js";
 
 export class SpaceCanvas {
     constructor() {
         this.canvas = document.querySelector('canvas');
         this.resizeCanvas();
         this.constellations = [];
-        this.showPosition = true;
-        this.showArea = true;
+        this.showPosition = SHOW_POSITIONS;
+        this.showArea = SHOW_AREA;
     }
 
     getContext() {
@@ -23,12 +24,10 @@ export class SpaceCanvas {
         
     }
 
-    generateConstellations() {
-        this.constellations.push(new Constellation(this));
-        // this.constellations.push(new Constellation(this));
-        // this.constellations.push(new Constellation(this));
-        // this.constellations.push(new Constellation(this));
-        // this.constellations.push(new Constellation(this));
+    generateConstellations(numberOfConstellations) {
+        for (let index = 0; index < numberOfConstellations; index++) {
+            this.constellations.push(new Constellation(this));
+        }
     }
 
     animate() {
