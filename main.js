@@ -1,3 +1,4 @@
+// @ts-check
 import { trackMouse, trackWindow, trackKey } from './handlers/events.js';
 import { SpaceCanvas } from './classes/canvas.js';
 import { NUMBER_OF_CONSTELATIONS } from './config.js';

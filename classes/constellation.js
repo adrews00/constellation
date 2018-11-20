@@ -1,3 +1,4 @@
+// @ts-check
 import { randomIntFromRange, distance, calcWaypoints } from "../util/util.js";
 import { Star } from './star.js';
 import { FIXED_INITIAL_BORDER, FIXED_NUMBER_OF_STARS, FIXED_SIZE, FIXED_POSITION, PRIMARY_START_MAX_DISTANCE, FIXED_NUMBER_OF_CHILDREN } from "../config.js";
@@ -245,9 +246,9 @@ export class Constellation {
         this.c.fillText('2', this.position.x + this.radius / 2, this.position.y - this.radius - 10);
         this.c.fillText('3', this.position.x + this.radius + 10, this.position.y - this.radius / 2);
         this.c.fillText('4', this.position.x + this.radius + 10, this.position.y + this.radius / 2);
-        this.c.fillText('5', this.position.x - this.radius / 2, this.position.y + this.radius + 18);
-        this.c.fillText('6', this.position.x + this.radius / 2, this.position.y + this.radius + 18);
-        this.c.fillText('7', this.position.x - this.radius - 18, this.position.y - this.radius / 2);
-        this.c.fillText('8', this.position.x - this.radius - 18, this.position.y + this.radius / 2);
+        this.c.fillText('5', this.position.x + this.radius / 2, this.position.y + this.radius + 18);
+        this.c.fillText('6', this.position.x - this.radius / 2, this.position.y + this.radius + 18);
+        this.c.fillText('7', this.position.x - this.radius - 18, this.position.y + this.radius / 2);
+        this.c.fillText('8', this.position.x - this.radius - 18, this.position.y - this.radius / 2);
     }
 }

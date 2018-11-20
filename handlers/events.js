@@ -1,3 +1,4 @@
+// @ts-check
 export function trackMouse(mouse) {
 
     window.addEventListener('mousemove', event => {

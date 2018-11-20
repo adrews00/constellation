@@ -1,3 +1,4 @@
+// @ts-check
 import { randomIntFromRange } from "../util/util.js";
 import { ELLIPSE_PADDING } from "../config.js";
 
@@ -11,6 +12,9 @@ export class Star {
         this.ellipseComplete = 0; 
         this.children = [];
         this.t = 1;
+        this.connectionWaypoints = [];
+        this.number = null;
+        this.parent = null;
     }
 
     draw() {
@@ -69,13 +73,70 @@ export class Star {
 
     setChildSpawnArea() {
         let spawnArea = {};
+
         switch (this.constellation.initialBorder) {
             case 1: 
                 spawnArea = {
                     x1: this.position.x,
-                    x2: this.position.x + ((this.constellation.position.x + this.constellation.radius - this.position.x) / this.constellation.numberOfStars - this.number),
+                    x2: this.position.x + ((this.constellation.position.x + this.constellation.radius - this.position.x) / (this.constellation.numberOfStars - this.number )),
                     y1: this.position.y,
-                    y2: this.position.y + ((this.constellation.position.y + this.constellation.radius - this.position.y) / this.constellation.numberOfStars - this.number)
+                    y2: this.position.y + ((this.constellation.position.y + this.constellation.radius - this.position.y) / (this.constellation.numberOfStars - this.number ))
+                };
+                break;
+            case 2: 
+                spawnArea = {
+                    x1: this.position.x - ((this.position.x - (this.constellation.position.x - this.constellation.radius)) / (this.constellation.numberOfStars - this.number )), 
+                    x2: this.position.x,
+                    y1: this.position.y,
+                    y2: this.position.y + ((this.constellation.position.y + this.constellation.radius - this.position.y) / (this.constellation.numberOfStars - this.number ))
+                };
+                break;
+            case 3: 
+                spawnArea = {
+                    x1: this.position.x - ((this.position.x - (this.constellation.position.x - this.constellation.radius)) / (this.constellation.numberOfStars - this.number )), 
+                    x2: this.position.x,
+                    y1: this.position.y,
+                    y2: this.position.y + ((this.constellation.position.y + this.constellation.radius - this.position.y) / (this.constellation.numberOfStars - this.number ))
+                };
+                break;
+            case 4: 
+                spawnArea = {
+                    x1: this.position.x - ((this.position.x - (this.constellation.position.x - this.constellation.radius)) / (this.constellation.numberOfStars - this.number )), 
+                    x2: this.position.x,
+                    y1: this.position.y - ((this.position.y - (this.constellation.position.y - this.constellation.radius)) / (this.constellation.numberOfStars - this.number )),
+                    y2: this.position.y
+                };
+                break;
+            case 5: 
+                spawnArea = {
+                    x1: this.position.x - ((this.position.x - (this.constellation.position.x - this.constellation.radius)) / (this.constellation.numberOfStars - this.number )), 
+                    x2: this.position.x,
+                    y1: this.position.y - ((this.position.y - (this.constellation.position.y - this.constellation.radius)) / (this.constellation.numberOfStars - this.number )),
+                    y2: this.position.y
+                };
+                break;
+            case 6: 
+                spawnArea = {
+                    x1: this.position.x,
+                    x2: this.position.x + ((this.constellation.position.x + this.constellation.radius - this.position.x) / (this.constellation.numberOfStars - this.number )),
+                    y1: this.position.y - ((this.position.y - (this.constellation.position.y - this.constellation.radius)) / (this.constellation.numberOfStars - this.number )),
+                    y2: this.position.y
+                };
+                break;
+            case 7: 
+                spawnArea = {
+                    x1: this.position.x,
+                    x2: this.position.x + ((this.constellation.position.x + this.constellation.radius - this.position.x) / (this.constellation.numberOfStars - this.number )),
+                    y1: this.position.y - ((this.position.y - (this.constellation.position.y - this.constellation.radius)) / (this.constellation.numberOfStars - this.number )),
+                    y2: this.position.y
+                };
+                break;
+            case 8: 
+                spawnArea = {
+                    x1: this.position.x,
+                    x2: this.position.x + ((this.constellation.position.x + this.constellation.radius - this.position.x) / (this.constellation.numberOfStars - this.number )),
+                    y1: this.position.y,
+                    y2: this.position.y + ((this.constellation.position.y + this.constellation.radius - this.position.y) / (this.constellation.numberOfStars - this.number ))
                 };
                 break;
         }

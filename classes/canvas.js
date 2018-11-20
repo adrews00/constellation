@@ -1,3 +1,4 @@
+// @ts-check
 import { Constellation } from "./constellation.js";
 import { SHOW_AREA, SHOW_POSITIONS } from "../config.js";
 
